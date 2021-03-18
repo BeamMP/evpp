@@ -30,7 +30,9 @@ vsprojects/evnsq-test.vcxproj.filters
 vsprojects/enc_temp_folder/
 vsprojects/evnsq-test.vcxproj.user
 vsprojects/libevpp-test.vcxproj.user
-
+cmake-build-debug/*
+cmake-build-release/*
+.idea/*
 *.vcxproj.user
 
 test/evpp-test
