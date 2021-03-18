@@ -5,12 +5,23 @@
 #include "evpp/httpc/ssl.h"
 #include <openssl/x509v3.h>
 #include <openssl/err.h>
+
+#include <utility>
 #endif
 
 #include "evpp/libevent.h"
 
 namespace evpp {
 namespace httpc {
+#if defined(EVPP_HTTP_CLIENT_SUPPORTS_SSL)
+int SSL_MODE = SSL_VERIFY_PEER;
+void SET_SSL_VERIFY_MODE(int SSL_VERIFY_MODE){
+    SSL_MODE = SSL_VERIFY_MODE;
+}
+int SSL_VERIFY_MODE(){
+    return SSL_MODE;
+}
+#endif
 Conn::Conn(ConnPool* p, EventLoop* l)
     : loop_(l), pool_(p)
     , host_(p->host())
@@ -24,13 +35,13 @@ Conn::Conn(ConnPool* p, EventLoop* l)
     , evhttp_conn_(nullptr) {
 }
 
-Conn::Conn(EventLoop* l, const std::string& h, int p,
+Conn::Conn(EventLoop* l, std::string h, int p,
 #if defined(EVPP_HTTP_CLIENT_SUPPORTS_SSL)
     bool enable_ssl,
 #endif
     Duration t)
     : loop_(l), pool_(nullptr)
-    , host_(h)
+    , host_(std::move(h))
     , port_(p)
 #if defined(EVPP_HTTP_CLIENT_SUPPORTS_SSL)
     , enable_ssl_(enable_ssl)
@@ -61,7 +72,7 @@ bool Conn::Init() {
         X509_VERIFY_PARAM* param = SSL_get0_param(ssl_);
         X509_VERIFY_PARAM_set_hostflags(param, X509_CHECK_FLAG_NO_PARTIAL_WILDCARDS);
         X509_VERIFY_PARAM_set1_host(param, host_.c_str(), 0);
-        SSL_set_verify(ssl_, SSL_VERIFY_PEER, nullptr);
+        SSL_set_verify(ssl_, SSL_MODE, nullptr);
         bufferevent_ = bufferevent_openssl_socket_new(loop_->event_base(), -1, ssl_,
             BUFFEREVENT_SSL_CONNECTING,
             BEV_OPT_CLOSE_ON_FREE | BEV_OPT_DEFER_CALLBACKS);
@@ -73,7 +84,7 @@ bool Conn::Init() {
         return false;
     }
     bufferevent_openssl_set_allow_dirty_shutdown(bufferevent_, 1);
-    evhttp_conn_ = evhttp_connection_base_bufferevent_new(loop_->event_base(), NULL, bufferevent_, host_.c_str(), port_);
+    evhttp_conn_ = evhttp_connection_base_bufferevent_new(loop_->event_base(), nullptr, bufferevent_, host_.c_str(), port_);
 #else
     evhttp_conn_ = evhttp_connection_base_new(loop_->event_base(), nullptr, host_.c_str(), port_);
 #endif

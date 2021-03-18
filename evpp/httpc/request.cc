@@ -6,18 +6,28 @@
 
 #if defined(EVPP_HTTP_CLIENT_SUPPORTS_SSL)
 #include <openssl/err.h>
+
+#include <memory>
+#include <utility>
+#include "evpp/httpc/ssl.h"
 #endif
 
 namespace evpp {
 namespace httpc {
-const std::string Request::empty_ = "";
+const std::string Request::empty_;
 
-Request::Request(ConnPool* pool, EventLoop* loop, const std::string& http_uri, const std::string& body)
-    : pool_(pool), loop_(loop), host_(pool->host()), port_(pool->port()), uri_(http_uri), body_(body) {
+Request::Request(ConnPool* pool, EventLoop* loop, std::string http_uri, std::string body)
+    : pool_(pool), loop_(loop), host_(pool->host()), port_(pool->port()), uri_(std::move(http_uri)), body_(std::move(body)) {
+#if defined(EVPP_HTTP_CLIENT_SUPPORTS_SSL)
+    if(!evpp::httpc::InitSSL()){
+        LOG_ERROR << "InitSSL Failed!";
+    }
+#endif
 }
 
-Request::Request(EventLoop* loop, const std::string& http_url, const std::string& body, Duration timeout)
-    : pool_(nullptr), loop_(loop), body_(body) {
+Request::Request(EventLoop* loop, const std::string& http_url, std::string body, Duration timeout)
+    : pool_(nullptr), loop_(loop), body_(std::move(body)) {
+
     //TODO performance compare
 #if LIBEVENT_VERSION_NUMBER >= 0x02001500
     struct evhttp_uri* evuri = evhttp_uri_parse(http_url.c_str());
@@ -36,12 +46,15 @@ Request::Request(EventLoop* loop, const std::string& http_url, const std::string
     port_ = evhttp_uri_get_port(evuri);
 
 #if defined(EVPP_HTTP_CLIENT_SUPPORTS_SSL)
+    if(!evpp::httpc::InitSSL()){
+        LOG_ERROR << "InitSSL Failed!";
+    }
     const char* scheme = evhttp_uri_get_scheme(evuri);
     bool enable_ssl = scheme && strcasecmp(scheme, "https") == 0;
     if (port_ < 0) {
         port_ = enable_ssl ? 443 : 80;
     }
-    conn_.reset(new Conn(loop, host_, port_, enable_ssl, timeout));
+    conn_ = std::make_shared<Conn>(loop, host_, port_, enable_ssl, timeout);
 #else
     if (port_ < 0) {
         port_ = 80;
@@ -68,7 +81,7 @@ Request::~Request() {
 
 void Request::Execute(const Handler& h) {
     handler_ = h;
-    loop_->RunInLoop(std::bind(&Request::ExecuteInLoop, this));
+    loop_->RunInLoop([this] { ExecuteInLoop(); });
 }
 
 void Request::ExecuteInLoop() {
@@ -161,12 +174,12 @@ void Request::Retry() {
     if (retry_interval_.IsZero()) {
         ExecuteInLoop();
     } else {
-        loop_->RunAfter(retry_interval_, std::bind(&Request::ExecuteInLoop, this));
+        loop_->RunAfter(retry_interval_, [this] { ExecuteInLoop(); });
     }
 }
 
 void Request::HandleResponse(struct evhttp_request* r, void* v) {
-    Request* thiz = (Request*)v;
+    auto* thiz = (Request*)v;
     assert(thiz);
     thiz->HandleResponse(r);
 }

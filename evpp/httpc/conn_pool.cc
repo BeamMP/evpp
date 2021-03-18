@@ -1,15 +1,17 @@
 #include "evpp/httpc/conn_pool.h"
+
+#include <utility>
 #include "evpp/httpc/conn.h"
 
 namespace evpp {
 namespace httpc {
-ConnPool::ConnPool(const std::string& h, int p,
+ConnPool::ConnPool(std::string h, int p,
 #if defined(EVPP_HTTP_CLIENT_SUPPORTS_SSL)
     bool enable_ssl,
 #endif
     Duration t,
     size_t size)
-    : host_(h), port_(p),
+    : host_(std::move(h)), port_(p),
 #if defined(EVPP_HTTP_CLIENT_SUPPORTS_SSL)
       enable_ssl_(enable_ssl),
 #endif
@@ -69,7 +71,7 @@ void ConnPool::Clear() {
     // Make sure delete Conn in its own EventLoop thread
     for (auto& m : map) {
         for (auto& c : m.second) {
-            m.first->RunInLoop(std::bind(&Conn::Close, c));
+            m.first->RunInLoop([&c] { c->Close(); });
         }
         m.second.clear();
     }

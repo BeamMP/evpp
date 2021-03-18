@@ -14,7 +14,7 @@ class Conn;
 typedef std::shared_ptr<Conn> ConnPtr;
 class EVPP_EXPORT ConnPool {
 public:
-    ConnPool(const std::string& host, int port,
+    ConnPool(std::string  host, int port,
 #if defined(EVPP_HTTP_CLIENT_SUPPORTS_SSL)
         bool enable_ssl,
 #endif

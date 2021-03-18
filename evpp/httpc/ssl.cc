@@ -11,6 +11,9 @@ namespace httpc {
 SSL_CTX* g_ssl_ctx = nullptr;
 
 bool InitSSL() {
+    if(g_ssl_ctx != nullptr)
+        return true;
+
     SSL_library_init();
     ERR_load_crypto_strings();
     SSL_load_error_strings();
@@ -23,11 +26,14 @@ bool InitSSL() {
     g_ssl_ctx = SSL_CTX_new(SSLv23_method());
     if (!g_ssl_ctx) {
         LOG_ERROR << "SSL_CTX_new failed";
+        g_ssl_ctx = nullptr;
         return false;
     }
     X509_STORE* store = SSL_CTX_get_cert_store(g_ssl_ctx);
     if (X509_STORE_set_default_paths(store) != 1) {
         LOG_ERROR << "X509_STORE_set_default_paths failed";
+        SSL_CTX_free(g_ssl_ctx);
+        g_ssl_ctx = nullptr;
         return false;
     }
     return true;

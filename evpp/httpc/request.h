@@ -24,7 +24,7 @@ public:
     // @param[in] uri_with_param - The URI of the HTTP request with parameters
     // @param[in] body -
     // @return  -
-    Request(ConnPool* pool, EventLoop* loop, const std::string& uri_with_param, const std::string& body);
+    Request(ConnPool* pool, EventLoop* loop, std::string  uri_with_param, std::string  body);
 
     // @brief Create a HTTP Request and create Conn myself
     //  Do a HTTP GET request if body is empty or HTTP POST request if body is not empty.
@@ -33,7 +33,7 @@ public:
     // @param[in] body -
     // @param[in] timeout -
     // @return -
-    Request(EventLoop* loop, const std::string& url, const std::string& body, Duration timeout);
+    Request(EventLoop* loop, const std::string& url, std::string  body, Duration timeout);
 
     ~Request();
 

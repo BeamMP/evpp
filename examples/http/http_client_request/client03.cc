@@ -1,12 +1,7 @@
-#include <stdio.h>
-#include <stdlib.h>
-
 #include <evpp/event_loop_thread.h>
-
 #include <evpp/httpc/conn_pool.h>
-#include <evpp/httpc/request.h>
-#include <evpp/httpc/conn.h>
 #include <evpp/httpc/response.h>
+#include <evpp/httpc/request.h>
 
 #include "../../../examples/winmain-inl.h"
 
@@ -25,12 +20,13 @@ int main() {
     t.Start(true);
 #if defined(EVPP_HTTP_CLIENT_SUPPORTS_SSL)
     std::shared_ptr<evpp::httpc::ConnPool> pool(new evpp::httpc::ConnPool("www.360.cn", 443,true, evpp::Duration(2.0)));
+    evpp::httpc::SET_SSL_VERIFY_MODE(SSL_VERIFY_NONE);
 #else
     std::shared_ptr<evpp::httpc::ConnPool> pool(new evpp::httpc::ConnPool("www.360.cn", 80, evpp::Duration(2.0)));
 #endif
-    evpp::httpc::Request* r = new evpp::httpc::Request(pool.get(), t.loop(), "/robots.txt", "");
+    auto* r = new evpp::httpc::Request(pool.get(), t.loop(), "/robots.txt", "");
     LOG_INFO << "Do http request";
-    r->Execute(std::bind(&HandleHTTPResponse, std::placeholders::_1, r));
+    r->Execute([&r](auto && PH1) { return HandleHTTPResponse(std::forward<decltype(PH1)>(PH1), r); });
 
     while (!responsed) {
         usleep(1);

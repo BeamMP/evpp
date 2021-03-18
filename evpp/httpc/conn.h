@@ -11,10 +11,14 @@
 struct evhttp_connection;
 namespace evpp {
 namespace httpc {
+#if defined(EVPP_HTTP_CLIENT_SUPPORTS_SSL)
+void SET_SSL_VERIFY_MODE(int SSL_VERIFY_MODE);
+int SSL_VERIFY_MODE();
+#endif
 class ConnPool;
 class EVPP_EXPORT Conn {
 public:
-    Conn(EventLoop* loop, const std::string& host, int port,
+    Conn(EventLoop* loop, std::string host, int port,
 #if defined(EVPP_HTTP_CLIENT_SUPPORTS_SSL)
         bool enable_ssl,
 #endif
@@ -66,5 +70,6 @@ private:
     Duration timeout_;
     struct evhttp_connection* evhttp_conn_;
 };
+
 } // httpc
 } // evpp
