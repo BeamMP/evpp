@@ -8,8 +8,10 @@
 static bool responsed = false;
 static void HandleHTTPResponse(const std::shared_ptr<evpp::httpc::Response>& response, evpp::httpc::Request* request) {
     LOG_INFO << "http_code=" << response->http_code() << " [" << response->body().ToString() << "]";
-    std::string header = response->FindHeader("Connection");
-    LOG_INFO << "HTTP HEADER Connection=" << header;
+    auto* ConnectionHeader = response->FindHeader("Connection");
+    if(ConnectionHeader != nullptr){
+        LOG_INFO << "HTTP HEADER Connection=" << std::string(ConnectionHeader);
+    }
     responsed = true;
     assert(request == response->request());
     delete request; // The request MUST BE deleted in EventLoop thread.
@@ -19,7 +21,7 @@ int main() {
     evpp::EventLoopThread t;
     t.Start(true);
 #if defined(EVPP_HTTP_CLIENT_SUPPORTS_SSL)
-    std::shared_ptr<evpp::httpc::ConnPool> pool(new evpp::httpc::ConnPool("www.360.cn", 443,true, evpp::Duration(2.0)));
+    std::shared_ptr<evpp::httpc::ConnPool> pool(new evpp::httpc::ConnPool("www.360.cn", 443,true, evpp::Duration(10.0)));
     evpp::httpc::SET_SSL_VERIFY_MODE(SSL_VERIFY_NONE);
 #else
     std::shared_ptr<evpp::httpc::ConnPool> pool(new evpp::httpc::ConnPool("www.360.cn", 80, evpp::Duration(2.0)));

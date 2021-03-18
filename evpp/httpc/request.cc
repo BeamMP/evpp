@@ -19,7 +19,7 @@ const std::string Request::empty_;
 Request::Request(ConnPool* pool, EventLoop* loop, std::string http_uri, std::string body)
     : pool_(pool), loop_(loop), host_(pool->host()), port_(pool->port()), uri_(std::move(http_uri)), body_(std::move(body)) {
 #if defined(EVPP_HTTP_CLIENT_SUPPORTS_SSL)
-    if(!evpp::httpc::InitSSL()){
+    if(!InitSSL()){
         LOG_ERROR << "InitSSL Failed!";
     }
 #endif
@@ -46,7 +46,7 @@ Request::Request(EventLoop* loop, const std::string& http_url, std::string body,
     port_ = evhttp_uri_get_port(evuri);
 
 #if defined(EVPP_HTTP_CLIENT_SUPPORTS_SSL)
-    if(!evpp::httpc::InitSSL()){
+    if(!InitSSL()){
         LOG_ERROR << "InitSSL Failed!";
     }
     const char* scheme = evhttp_uri_get_scheme(evuri);
@@ -81,7 +81,7 @@ Request::~Request() {
 
 void Request::Execute(const Handler& h) {
     handler_ = h;
-    loop_->RunInLoop([this] { ExecuteInLoop(); });
+    loop_->RunInLoop(std::bind(&Request::ExecuteInLoop, this));
 }
 
 void Request::ExecuteInLoop() {

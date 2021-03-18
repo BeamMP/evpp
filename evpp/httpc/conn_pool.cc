@@ -71,7 +71,7 @@ void ConnPool::Clear() {
     // Make sure delete Conn in its own EventLoop thread
     for (auto& m : map) {
         for (auto& c : m.second) {
-            m.first->RunInLoop([&c] { c->Close(); });
+            m.first->RunInLoop(std::bind(&Conn::Close, c));
         }
         m.second.clear();
     }

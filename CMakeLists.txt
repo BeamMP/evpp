@@ -55,7 +55,7 @@ endif (UNIX)
 
 # Set to true if https support is needed.
 # Note that this needs openssl
-# SET(HTTPS True)
+SET(HTTPS True)
 if (HTTPS)
     find_package(OpenSSL REQUIRED)
     list(APPEND DEPENDENT_LIBRARIES OpenSSL::SSL OpenSSL::Crypto event_openssl)
