@@ -24,12 +24,12 @@ int main(int argc, char* argv[]) {
     evpp::EventLoopThread t;
     t.Start(true);
 #if defined(EVPP_HTTP_CLIENT_SUPPORTS_SSL)
-    std::shared_ptr<evpp::httpc::ConnPool> pool(new evpp::httpc::ConnPool("reqbin.com", 443,true, evpp::Duration(10.0)));
-    evpp::httpc::SET_SSL_VERIFY_MODE(SSL_VERIFY_NONE);
+    std::shared_ptr<evpp::httpc::ConnPool> pool(new evpp::httpc::ConnPool("www.sohu.com", 443,true, evpp::Duration(10.0)));
+    //evpp::httpc::SET_SSL_VERIFY_MODE(SSL_VERIFY_NONE);
 #else
     std::shared_ptr<evpp::httpc::ConnPool> pool(new evpp::httpc::ConnPool("www.360.cn", 80, evpp::Duration(2.0)));
 #endif
-    auto* r = new evpp::httpc::Request(pool.get(), t.loop(), "/echo/get/json", "");
+    auto* r = new evpp::httpc::Request(pool.get(), t.loop(), "/robots.txt", "");
     std::cout << "Do http request\n";
     r->Execute([&r](auto && PH1) { return HandleHTTPResponse(std::forward<decltype(PH1)>(PH1), r); });
 
