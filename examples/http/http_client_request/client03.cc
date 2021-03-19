@@ -25,7 +25,7 @@ int main(int argc, char* argv[]) {
     t.Start(true);
 #if defined(EVPP_HTTP_CLIENT_SUPPORTS_SSL)
     std::shared_ptr<evpp::httpc::ConnPool> pool(new evpp::httpc::ConnPool("www.sohu.com", 443,true, evpp::Duration(10.0)));
-    //evpp::httpc::SET_SSL_VERIFY_MODE(SSL_VERIFY_NONE);
+    evpp::httpc::SET_SSL_VERIFY_MODE(SSL_VERIFY_NONE);
 #else
     std::shared_ptr<evpp::httpc::ConnPool> pool(new evpp::httpc::ConnPool("www.360.cn", 80, evpp::Duration(2.0)));
 #endif

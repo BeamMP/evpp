@@ -1,5 +1,6 @@
 cmake_minimum_required (VERSION 2.8)
 
+
 project (safe-evpp C CXX)
 
 if (UNIX)
@@ -48,17 +49,23 @@ string (REPLACE ";" " " CMAKE_CXX_FLAGS "${CXX_FLAGS}")
 if (UNIX)
     SET(CMAKE_CXX_FLAGS_DEBUG   "-O0 -g -ggdb -D_DEBUG -DGOOGLE_STRIP_LOG=0")
     SET(CMAKE_CXX_FLAGS_RELEASE "-O3 -g -ggdb -DNDEBUG -DGOOGLE_STRIP_LOG=1")
-    SET(DEPENDENT_LIBRARIES event glog pthread)
-else (UNIX)
-    SET(DEPENDENT_LIBRARIES event glog)
+    SET(DEPENDENT_LIBRARIES glog event pthread)
+else(UNIX)
+    find_package(glog CONFIG REQUIRED)
+    find_package(Libevent CONFIG REQUIRED)
+    SET(DEPENDENT_LIBRARIES libevent::core libevent::extra glog::glog)
 endif (UNIX)
 
 # Set to true if https support is needed.
 # Note that this needs openssl
 SET(HTTPS True)
 if (HTTPS)
-    find_package(OpenSSL REQUIRED)
-    list(APPEND DEPENDENT_LIBRARIES OpenSSL::SSL OpenSSL::Crypto event_openssl)
+    if(UNIX)
+        list(APPEND DEPENDENT_LIBRARIES ssl crypto event_openssl)
+    else(UNIX)
+        find_package(OpenSSL REQUIRED)
+        list(APPEND DEPENDENT_LIBRARIES OpenSSL::SSL OpenSSL::Crypto libevent::openssl)
+    endif(UNIX)
     SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DEVPP_HTTP_CLIENT_SUPPORTS_SSL")
     SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DEVPP_HTTP_SERVER_SUPPORTS_SSL")
 endif (HTTPS)
