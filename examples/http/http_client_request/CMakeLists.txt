@@ -1,4 +1,3 @@
-cmake_minimum_required (VERSION 3.8)
 
 add_executable(example_http_client_request01 client01.cc)
 target_link_libraries(example_http_client_request01 ${LIBRARIES})
