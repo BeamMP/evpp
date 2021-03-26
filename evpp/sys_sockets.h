@@ -11,11 +11,12 @@
 #include <windows.h>
 
 #include <ws2tcpip.h>
-#include <WinSock2.h>
+#include <winsock2.h>
 #include <io.h>
 #include <ws2ipdef.h>
-
+#ifndef MINGW
 typedef int ssize_t;
+#endif
 #define iovec _WSABUF
 #define iov_base buf
 #define iov_len  len

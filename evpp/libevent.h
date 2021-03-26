@@ -11,7 +11,7 @@
 #include "platform_config.h"
 
 #ifdef _WIN32
-#include <WinSock2.h>
+#include <winsock2.h>
 #endif
 
 

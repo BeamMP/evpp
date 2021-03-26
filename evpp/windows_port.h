@@ -6,9 +6,14 @@
 #include <iostream>
 #endif
 
+#if(defined(__MINGW32__) || defined(__MINGW64__))
+#   ifndef MINGW
+#       define MINGW
+#   endif
+#endif
 
 //! Define Operation System.
-#if ( defined(WIN32) || defined(WIN64) )
+#if ( defined(WIN32) || defined(WIN64) || defined(MINGW))
 #   ifndef H_OS_WINDOWS
 #       define H_OS_WINDOWS
 #   endif
@@ -18,7 +23,9 @@
 #endif
 
 #ifdef H_OS_WINDOWS
+#ifndef MINGW
 #define usleep(us) Sleep((us)/1000)
+#endif
 #define snprintf  _snprintf
 #define thread_local __declspec(thread)
 #define strcasecmp   _stricmp

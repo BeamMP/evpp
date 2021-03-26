@@ -1,17 +1,15 @@
 #pragma once
 
-#include <time.h>
-#include <stdint.h>
+#include <ctime>
+#include <cstdint>
 
 #ifdef WIN32
 #define _WINSOCKAPI_
 #include <windows.h>
-#include <WinSock2.h>
-#else
-#include <sys/time.h>
+#include <winsock2.h>
 #endif
 
-#ifdef WIN32
+#if defined(WIN32) && !defined(MINGW)
 
 #ifndef H_GETTIMEOFDAY
 #define H_GETTIMEOFDAY
@@ -44,8 +42,9 @@ inline int gettimeofday(struct timeval* tp, void* tzp) {
     return (0);
 }
 #endif // end of H_GETTIMEOFDAY
-
-#endif //end of WIN32
+#else
+#include <sys/time.h>
+#endif //end of WIN32 || MINGW
 
 namespace evpp {
 inline double utcsecond() {
