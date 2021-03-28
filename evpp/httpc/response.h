@@ -14,7 +14,7 @@ class EVPP_EXPORT Response {
 public:
     typedef std::map<evpp::Slice, evpp::Slice> Headers;
 #if defined(EVPP_HTTP_CLIENT_SUPPORTS_SSL)
-    Response(Request* r, struct evhttp_request* evreq, bool had_ssl_error = false);
+    Response(Request* r, struct evhttp_request* evreq, std::vector<char>& body, bool had_ssl_error = false);
 #else
     Response(Request* r, struct evhttp_request* evreq);
 #endif

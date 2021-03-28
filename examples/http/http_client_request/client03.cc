@@ -8,6 +8,7 @@
 static bool responsed = false;
 static void HandleHTTPResponse(const std::shared_ptr<evpp::httpc::Response>& response, evpp::httpc::Request* request) {
     std::cout << "http_code=" << response->http_code() << " [" << response->body().ToString() << "]\n";
+    std::cout << "final body size : " << response->body().size() << std::endl;
     auto* ConnectionHeader = response->FindHeader("Connection");
     if(ConnectionHeader != nullptr){
         std::cout << "HTTP HEADER Connection=" << std::string(ConnectionHeader) << "\n";
@@ -15,6 +16,11 @@ static void HandleHTTPResponse(const std::shared_ptr<evpp::httpc::Response>& res
     responsed = true;
     assert(request == response->request());
     delete request; // The request MUST BE deleted in EventLoop thread.
+}
+
+void Progress(size_t C, size_t T){
+    float Per = (C * 100.0f) / T;
+    std::cout << Per << "%" << std::endl;
 }
 
 int main(int argc, char* argv[]) {
@@ -30,6 +36,7 @@ int main(int argc, char* argv[]) {
     std::shared_ptr<evpp::httpc::ConnPool> pool(new evpp::httpc::ConnPool("www.360.cn", 80, evpp::Duration(2.0)));
 #endif
     auto* r = new evpp::httpc::Request(pool.get(), t.loop(), "/robots.txt", "");
+    r->set_progress_callback(Progress);
     std::cout << "Do http request\n";
     r->Execute([&r](auto && PH1) { return HandleHTTPResponse(std::forward<decltype(PH1)>(PH1), r); });
 

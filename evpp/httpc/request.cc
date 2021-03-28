@@ -84,6 +84,24 @@ void Request::Execute(const Handler& h) {
     loop_->RunInLoop(std::bind(&Request::ExecuteInLoop, this));
 }
 
+void Request::ReadChunkCallback(struct evhttp_request* r, void* v) {
+    auto* thiz = (Request*)v;
+    assert(thiz);
+
+    if(thiz->response_body_.empty()) {
+        thiz->response_body_.reserve(r->body_size + r->ntoread);
+    }
+
+    thiz->progress_(r->body_size, thiz->response_body_.capacity());
+
+    struct evbuffer* evbuf = evhttp_request_get_input_buffer(r);
+    size_t buffer_size = evbuffer_get_length(evbuf);
+    char* data = (char*)evbuffer_pullup(evbuf, -1);
+    for(size_t i = 0; i < buffer_size; i++) {
+        thiz->response_body_.push_back(data[i]);
+    }
+}
+
 void Request::ExecuteInLoop() {
     DLOG_TRACE;
     assert(loop_->IsInLoopThread());
@@ -108,9 +126,14 @@ void Request::ExecuteInLoop() {
     }
 
     req = evhttp_request_new(&Request::HandleResponse, this);
+
     if (!req) {
         errmsg = "evhttp_request_new fail";
         goto failed;
+    }
+
+    if(progress_) {
+        evhttp_request_set_chunked_cb(req, &Request::ReadChunkCallback);
     }
 
     if (evhttp_add_header(req->output_headers, "host", conn_->host().c_str())) {
@@ -153,7 +176,7 @@ failed:
         return;
     }
 
-    std::shared_ptr<Response> response(new Response(this, nullptr));
+    std::shared_ptr<Response> response(new Response(this, nullptr, response_body_));
     handler_(response);
 }
 
@@ -192,7 +215,8 @@ void Request::HandleResponse(struct evhttp_request* r) {
         bool needs_retry = response_code >= 500 && response_code < 600;
         if (!needs_retry || retried_ >= retry_number_) {
             LOG_WARN << "this=" << this << " response_code=" << r->response_code << " retried=" << retried_ << " max retry_time=" << retry_number_;
-            std::shared_ptr<Response> response(new Response(this, r));
+
+            std::shared_ptr<Response> response(new Response(this, r, response_body_));
 
             //Recycling the http Connection object
             if (pool_) {
@@ -230,7 +254,7 @@ void Request::HandleResponse(struct evhttp_request* r) {
     }
 #endif
     // Eventually this Request failed
-    std::shared_ptr<Response> response(new Response(this, r));
+    std::shared_ptr<Response> response(new Response(this, r, response_body_));
 
     // Recycling the http Connection object
     if (pool_) {

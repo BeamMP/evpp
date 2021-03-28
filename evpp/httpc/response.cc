@@ -8,7 +8,7 @@
 namespace evpp {
 namespace httpc {
 #if defined(EVPP_HTTP_CLIENT_SUPPORTS_SSL)
-Response::Response(Request* r, struct evhttp_request* evreq, bool had_ssl_error)
+Response::Response(Request* r, struct evhttp_request* evreq, std::vector<char>& body, bool had_ssl_error)
     : request_(r), evreq_(evreq), http_code_(0), had_ssl_error_(had_ssl_error) {
 #else
 Response::Response(Request* r, struct evhttp_request* evreq)
@@ -18,14 +18,22 @@ Response::Response(Request* r, struct evhttp_request* evreq)
         http_code_ = evreq->response_code;
 
 #if LIBEVENT_VERSION_NUMBER >= 0x02001500
-        struct evbuffer* evbuf = evhttp_request_get_input_buffer(evreq);
-        size_t buffer_size = evbuffer_get_length(evbuf);
-        if (buffer_size > 0) {
-            this->body_ = evpp::Slice((char*)evbuffer_pullup(evbuf, -1), buffer_size);
+        if(!body.empty()){
+            this->body_ = evpp::Slice(body.data(), body.size());
+        } else {
+            struct evbuffer *evbuf = evhttp_request_get_input_buffer(evreq);
+            size_t buffer_size = evbuffer_get_length(evbuf);
+            if (buffer_size > 0) {
+                this->body_ = evpp::Slice((char *) evbuffer_pullup(evbuf, -1), buffer_size);
+            }
         }
 #else
-        if (evreq->input_buffer->off > 0) {
-            this->body_ = evpp::Slice((char*)evreq->input_buffer->buffer, evreq->input_buffer->off);
+        if(!body.empty()){
+            this->body_ = evpp::Slice(body.data(), body.size());
+        } else {
+            if (evreq->input_buffer->off > 0) {
+                this->body_ = evpp::Slice((char*)evreq->input_buffer->buffer, evreq->input_buffer->off);
+            }
         }
 #endif
     }

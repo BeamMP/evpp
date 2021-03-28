@@ -51,11 +51,15 @@ public:
     void set_retry_number(int v) {
         retry_number_ = v;
     }
+    void set_progress_callback(void (*pr)(size_t, size_t)){
+        progress_ = pr;
+    }
     void set_retry_interval(Duration d) {
         retry_interval_ = d;
     }
     void AddHeader(const std::string& header, const std::string& value);
 private:
+    static void ReadChunkCallback(struct evhttp_request* r, void* v);
     static void HandleResponse(struct evhttp_request* r, void* v);
     void HandleResponse(struct evhttp_request* r);
     void ExecuteInLoop();
@@ -72,6 +76,11 @@ private:
     std::string body_;
     std::shared_ptr<Conn> conn_;
     Handler handler_;
+
+    // this function if set will be called with downloaded / total
+    void (*progress_)(size_t, size_t) = nullptr;
+    //final response if there was a progress bar
+    std::vector<char> response_body_;
 
     // The retried times
     int retried_ = 0;
