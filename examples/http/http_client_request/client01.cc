@@ -10,7 +10,7 @@
 #include "../../../examples/winmain-inl.h"
 
 static bool responsed = false;
-static void HandleHTTPResponse(const std::shared_ptr<evpp::httpc::Response>& response, evpp::httpc::GetRequest* request) {
+void HandleHTTPResponse(const std::shared_ptr<evpp::httpc::Response>& response, evpp::httpc::Request* request) {
     LOG_INFO << "http_code=" << response->http_code() << " [" << response->body().ToString() << "]";
     std::string header = response->FindHeader("Connection");
     LOG_INFO << "HTTP HEADER Connection=" << header;
@@ -28,7 +28,7 @@ int main(int argc, char* argv[]) {
     t.Start(true);
     evpp::httpc::GetRequest* r = new evpp::httpc::GetRequest(t.loop(), "http://www.so.com/status.html", evpp::Duration(2.0));
     LOG_INFO << "Do http request";
-    r->Execute(std::bind(&HandleHTTPResponse, std::placeholders::_1, r));
+    r->Execute(HandleHTTPResponse);
 
     while (!responsed) {
         usleep(1);

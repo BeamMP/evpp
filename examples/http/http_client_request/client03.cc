@@ -6,7 +6,7 @@
 #include "../../../examples/winmain-inl.h"
 
 static bool responsed = false;
-static void HandleHTTPResponse(const std::shared_ptr<evpp::httpc::Response>& response, evpp::httpc::Request* request) {
+void HandleHTTPResponse(const std::shared_ptr<evpp::httpc::Response>& response, evpp::httpc::Request* request) {
     std::cout << "http_code=" << response->http_code() << " [" << response->body().ToString() << "]\n";
     std::cout << "final body size : " << response->body().size() << std::endl;
     auto* ConnectionHeader = response->FindHeader("Connection");
@@ -38,7 +38,7 @@ int main(int argc, char* argv[]) {
     auto* r = new evpp::httpc::Request(pool.get(), t.loop(), "/robots.txt", "");
     r->set_progress_callback(Progress);
     std::cout << "Do http request\n";
-    r->Execute([&r](auto && PH1) { return HandleHTTPResponse(std::forward<decltype(PH1)>(PH1), r); });
+    r->Execute(HandleHTTPResponse);
 
     while (!responsed) {
         usleep(1);

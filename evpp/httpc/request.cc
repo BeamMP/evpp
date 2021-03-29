@@ -177,7 +177,7 @@ failed:
     }
 
     std::shared_ptr<Response> response(new Response(this, nullptr, response_body_));
-    handler_(response);
+    handler_(response, this);
 }
 
 void Request::AddHeader(const std::string& header, const std::string& value) {
@@ -224,7 +224,7 @@ void Request::HandleResponse(struct evhttp_request* r) {
                 conn_.reset();
             }
 
-            handler_(response);
+            handler_(response, this);
             return;
         }
     }
@@ -262,7 +262,7 @@ void Request::HandleResponse(struct evhttp_request* r) {
         conn_.reset();
     }
 
-    handler_(response);
+    handler_(response, this);
 }
 
 } // httpc

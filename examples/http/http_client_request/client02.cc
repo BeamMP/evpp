@@ -10,7 +10,7 @@
 #include "../../../examples/winmain-inl.h"
 
 static int responsed = 0;
-static void HandleHTTPResponse(const std::shared_ptr<evpp::httpc::Response>& response, evpp::httpc::GetRequest* request) {
+static void HandleHTTPResponse(const std::shared_ptr<evpp::httpc::Response>& response, evpp::httpc::Request* request) {
     LOG_INFO << "http_code=" << response->http_code()
         << " URL=http://" << request->host() << request->uri()
         << " [" << response->body().ToString() << "]";
@@ -27,11 +27,11 @@ int main() {
     evpp::EventLoopThread t;
     t.Start(true);
     evpp::httpc::GetRequest* r = new evpp::httpc::GetRequest(t.loop(), "http://www.360.cn/robots.txt", evpp::Duration(5.0));
-    r->Execute(std::bind(&HandleHTTPResponse, std::placeholders::_1, r));
+    r->Execute(HandleHTTPResponse);
     r = new evpp::httpc::GetRequest(t.loop(), "http://www.sohu.com/robots.txt", evpp::Duration(5.0));
-    r->Execute(std::bind(&HandleHTTPResponse, std::placeholders::_1, r));
+    r->Execute(HandleHTTPResponse);
     r = new evpp::httpc::GetRequest(t.loop(), "http://www.so.com/status.html", evpp::Duration(5.0));
-    r->Execute(std::bind(&HandleHTTPResponse, std::placeholders::_1, r));
+    r->Execute(HandleHTTPResponse);
     while (responsed != 3) {
         usleep(1);
     }

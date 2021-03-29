@@ -17,7 +17,7 @@ static void HandleHTTPResponse(const std::shared_ptr<evpp::httpc::Response>& r, 
     responsed++;
     if (retried < 3) {
         retried++;
-        req->Execute(std::bind(&HandleHTTPResponse, std::placeholders::_1, req));
+        req->Execute(HandleHTTPResponse);
     } else {
         delete req;
     }
@@ -28,7 +28,7 @@ int main() {
     t.Start(true);
     evpp::httpc::Request* r = new evpp::httpc::Request(t.loop(), "http://www.360.cn/robots.txt", "", evpp::Duration(2.0));
     LOG_INFO << "Do http request";
-    r->Execute(std::bind(&HandleHTTPResponse, std::placeholders::_1, r));
+    r->Execute(HandleHTTPResponse);
 
     while (responsed != 4) {
         usleep(1);

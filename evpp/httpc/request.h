@@ -4,7 +4,6 @@
 
 #include "evpp/inner_pre.h"
 #include "evpp/event_loop.h"
-
 #include "evpp/httpc/conn.h"
 
 struct evhttp_connection;
@@ -12,8 +11,9 @@ namespace evpp {
 namespace httpc {
 class ConnPool;
 class Response;
+class Request;
 class Conn;
-typedef std::function<void(const std::shared_ptr<Response>&)> Handler;
+typedef void (*Handler)(const std::shared_ptr<Response>&, Request*);
 
 class EVPP_EXPORT Request {
 public:
