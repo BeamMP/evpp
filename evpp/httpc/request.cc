@@ -106,7 +106,6 @@ void Request::ReadChunkCallback(struct evhttp_request* r, void* v) {
 void Request::ExecuteInLoop() {
     DLOG_TRACE;
     assert(loop_->IsInLoopThread());
-    evhttp_cmd_type req_type = EVHTTP_REQ_GET;
 
     std::string errmsg;
     struct evhttp_request* req = nullptr;
@@ -153,7 +152,6 @@ void Request::ExecuteInLoop() {
     }
 
     if (!body_.empty()) {
-        req_type = EVHTTP_REQ_POST;
         if (evbuffer_add(req->output_buffer, body_.c_str(), body_.size())) {
             evhttp_request_free(req);
             errmsg = "evbuffer_add fail";
@@ -161,7 +159,7 @@ void Request::ExecuteInLoop() {
         }
     }
 
-    if (evhttp_make_request(conn_->evhttp_conn(), req, req_type, uri_.c_str()) != 0) {
+    if (evhttp_make_request(conn_->evhttp_conn(), req, RequestType_, uri_.c_str()) != 0) {
         // At here conn_ has owned this req, so don't need to free it.
         errmsg = "evhttp_make_request fail";
         goto failed;

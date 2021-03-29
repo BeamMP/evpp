@@ -5,6 +5,7 @@
 #include "evpp/inner_pre.h"
 #include "evpp/event_loop.h"
 #include "evpp/httpc/conn.h"
+#include "evpp/libevent.h"
 
 struct evhttp_connection;
 namespace evpp {
@@ -57,6 +58,9 @@ public:
     void set_retry_interval(Duration d) {
         retry_interval_ = d;
     }
+    void set_request_type(evhttp_cmd_type Type){
+        RequestType_ = Type;
+    }
     void AddHeader(const std::string& header, const std::string& value);
 private:
     static void ReadChunkCallback(struct evhttp_request* r, void* v);
@@ -76,6 +80,8 @@ private:
     std::string body_;
     std::shared_ptr<Conn> conn_;
     Handler handler_;
+
+    evhttp_cmd_type RequestType_ = EVHTTP_REQ_GET;
 
     // this function if set will be called with downloaded / total
     void (*progress_)(size_t, size_t) = nullptr;
@@ -97,19 +103,27 @@ typedef std::shared_ptr<Request> RequestPtr;
 class GetRequest : public Request {
 public:
     GetRequest(ConnPool* pool, EventLoop* loop, const std::string& uri_with_param)
-        : Request(pool, loop, uri_with_param, empty_) {}
+        : Request(pool, loop, uri_with_param, empty_) {
+        set_request_type(EVHTTP_REQ_GET);
+    }
 
     GetRequest(EventLoop* loop, const std::string& url, Duration timeout)
-        : Request(loop, url, empty_, timeout) {}
+        : Request(loop, url, empty_, timeout) {
+        set_request_type(EVHTTP_REQ_GET);
+    }
 };
 
 class PostRequest : public Request {
 public:
     PostRequest(ConnPool* pool, EventLoop* loop, const std::string& uri_with_param, const std::string& body)
-        : Request(pool, loop, uri_with_param, body) {}
+        : Request(pool, loop, uri_with_param, body) {
+        set_request_type(EVHTTP_REQ_POST);
+    }
 
     PostRequest(EventLoop* loop, const std::string& url, const std::string& body, Duration timeout)
-        : Request(loop, url, body, timeout) {}
+        : Request(loop, url, body, timeout) {
+        set_request_type(EVHTTP_REQ_POST);
+    }
 };
 
 } // httpc
