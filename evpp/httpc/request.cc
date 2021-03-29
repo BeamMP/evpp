@@ -44,13 +44,14 @@ Request::Request(EventLoop* loop, const std::string& http_url, std::string body,
     host_ = evhttp_uri_get_host(evuri);
 
     port_ = evhttp_uri_get_port(evuri);
-
 #if defined(EVPP_HTTP_CLIENT_SUPPORTS_SSL)
     if(!InitSSL()){
         LOG_ERROR << "InitSSL Failed!";
     }
     const char* scheme = evhttp_uri_get_scheme(evuri);
-    bool enable_ssl = scheme && strcasecmp(scheme, "https") == 0;
+
+    bool enable_ssl = scheme && std::string(scheme).find("https") == 0;
+
     if (port_ < 0) {
         port_ = enable_ssl ? 443 : 80;
     }

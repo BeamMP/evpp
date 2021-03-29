@@ -11,7 +11,7 @@ namespace httpc {
 Response::Response(Request* r, struct evhttp_request* evreq, std::vector<char>& body, bool had_ssl_error)
     : request_(r), evreq_(evreq), http_code_(0), had_ssl_error_(had_ssl_error) {
 #else
-Response::Response(Request* r, struct evhttp_request* evreq)
+Response::Response(Request* r, struct evhttp_request* evreq, std::vector<char>& body)
     : request_(r), evreq_(evreq), http_code_(0) {
 #endif
     if (evreq) {

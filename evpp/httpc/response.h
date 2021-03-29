@@ -16,7 +16,7 @@ public:
 #if defined(EVPP_HTTP_CLIENT_SUPPORTS_SSL)
     Response(Request* r, struct evhttp_request* evreq, std::vector<char>& body, bool had_ssl_error = false);
 #else
-    Response(Request* r, struct evhttp_request* evreq);
+    Response(Request* r, struct evhttp_request* evreq, std::vector<char>& body);
 #endif
     ~Response();
 
